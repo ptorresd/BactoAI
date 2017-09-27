@@ -57,19 +57,56 @@ azul = TipoBacteria(70, 3, 3, 3, "Azul", 6)
 violeta = TipoBacteria(130, 3.5, 1.5, 3, "Violeta", 6)
 verde = TipoBacteria(70, 2, 2, 5  , "Verde", 6)
 
+training_1 = TipoBacteria(70, 3, 3, 3, "T1", 6)
+training_2 = TipoBacteria(70, 3, 3, 3, "T2", 6)
+
 
 ##################################################### Campo ###########################################################
 
 
 class Campo:
 
+
     def __init__(self):
         self.colonias=[]
         self.ataques=[]
 
+    def set_amenaza(self):
+        for c in self.colonias:
+            c.amenaza=0.0
+        for a in self.ataques:
+            a.objetivo.amenaza+=a.cantidad
+        for c in self.colonias:
+            c.amenaza=min(c.amenaza/(c.bacterias+30),1.0)
+
+    def get_input(self, nombre):
+        input=[]
+        self.set_amenaza()
+        for c in self.colonias:
+            mismo_tipo=0
+            if c.tipo.nombre==nombre:
+                mismo_tipo=1
+            input+=[c.x/640, c.y/480,min(c.bacterias/100,1),mismo_tipo, c.amenaza]
+        return input
+
+
+    def indicador(self, tipo):
+        ind=0
+        for c in self.colonias:
+            if c.tipo.nombre==tipo.nombre:
+                ind+=50+c.bacterias
+            else:
+                ind-=50+c.bacterias
+        for a in self.ataques:
+            if a.tipo.nombre==tipo.nombre:
+                ind+=a.cantidad
+            else:
+                ind-=a.cantidad
+        return ind
+
     def rellenar(self,tipo1,tipo2):
         neutral=TipoBacteria(0,0,1,0,"neutral",1)
-        n=int(random.random()*5+10)
+        n=10#int(random.random()*5+10)
         base1=Colonia(60,60,20,tipo1,45)
         self.addColonia(base1)
         base2=Colonia(580,420,20,tipo2,45)
@@ -129,6 +166,7 @@ class Campo:
 class Colonia:
 
     def __init__(self,x,y,nBacterias,tipo,radio):
+        self.amenaza=0.0
         self.radioMin=radio*1.0
         self.radioMax=radio+34
         self.campo=[]

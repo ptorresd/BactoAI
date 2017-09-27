@@ -1,122 +1,61 @@
+from NeuralNetwork import *
 import random
-
-def sacarMaximoBacterias(colonias):
-    aux=[]
-    maximo=colonias[0]
-    for c in colonias:
-        if c.bacterias>maximo.bacterias:
-            maximo=c
-    for c in colonias:
-        if c!=maximo:
-            aux+=[c]
-    return [maximo,aux]
-
-def minimoBacterias(colonias):
-    aux=[]
-    minimo=colonias[0]
-    for c in colonias:
-        if c.bacterias<minimo.bacterias:
-            minimo=c
-    return minimo
-
-def maximoDistancia(colonias,objetivo):
-    maximo=colonias[0]
-    for c in colonias:
-        if c.dis(objetivo)>maximo.dis(objetivo):
-            maximo=c
-    return maximo
-
 class IA:
 
-    def __init__(self, nombre, campo, dificultad):
-        self.nombre=nombre
+    def __init__(self, network, nombre, campo, aps):
+        self.network=network
         self.campo=campo
-        self.dificultad=dificultad
+        self.nombre=nombre
+        self.aps=aps
         self.contador=0
-        self.baneadas=[]
-        self.tiempoBaneadas=[]
 
-    def getColonias(self):
-        aliadas=[]
-        noAliadas=[]
-        for c in self.campo.colonias:
-            if c.tipo.nombre==self.nombre:
-                aliadas+=[c]
-            else:
-                noAliadas+=[c]
-        return [aliadas,noAliadas]
+    def jugar(self, dt):
 
-    def calcularTiempo(self,origen,objetivo):
-        vel=origen.tipo.velocidad
-        dis=origen.dis(objetivo)
-        return (dis/vel)
-
-    def sirve(self,origen,objetivo):
-        cantidad=(origen.bacterias+1)//2
-        bactEnemigas=objetivo.bacterias+self.calcularTiempo(origen,objetivo)*objetivo.tipo.reproduccion
-        return bactEnemigas*objetivo.tipo.defensa<cantidad*origen.tipo.ataque
-
-    def sirven(self,colonias,objetivo):
-        cantidad=0
-        for origen in colonias:
-            cantidad+=(origen.bacterias+1)//2
-        tiempo=self.calcularTiempo(maximoDistancia(colonias,objetivo) ,objetivo)
-        bactEnemigas=objetivo.bacterias+tiempo*objetivo.tipo.reproduccion
-        return bactEnemigas*objetivo.tipo.defensa<cantidad*colonias[0].tipo.ataque
-
-    def jugadaSimple(self):
-        colonias=self.getColonias()
-        mejorOpcion=0
-        disMin=1000000
-        for ori in colonias[0]:
-            for obj in colonias[1]:
-                if self.sirve(ori,obj) and ori.dis(obj)<disMin and obj not in self.baneadas:
-                    alreadyAtacked=False
-                    for a in self.campo.ataques:
-                        if a.objetivo==obj and a.tipo.nombre==self.nombre:
-                            alreadyAtacked=True
-                    if not alreadyAtacked:
-                        disMin=ori.dis(obj)
-                        mejorOpcion=[ori,obj]
-        return mejorOpcion
-
-
-    def jugadaElaborada(self):
-        aliadas,enemigas = self.getColonias()
-        colonias=[]
-        objetivo=minimoBacterias(enemigas)
-        jugada=0
-        while aliadas!=[]:
-            maximo,aliadas=sacarMaximoBacterias(aliadas)
-            colonias+=[maximo]
-            if self.sirven(colonias,objetivo):
-                alreadyAtacked = False
-                for a in self.campo.ataques:
-                    if a.objetivo == objetivo and a.tipo.nombre == self.nombre:
-                        alreadyAtacked = True
-                if not alreadyAtacked:
-                    jugada=[colonias,objetivo]
-                    break
-
-        if jugada != 0:
-            for c in jugada[0]:
-                c.atacar(jugada[1])
-
-    def jugadaNoTanElaborada(self):
-        aliadas,enemigas = self.getColonias()
-        objetivo=minimoBacterias(enemigas)
-        maximo,basura=sacarMaximoBacterias(aliadas)
-        maximo.atacar(objetivo)
-
-
-
-    def jugar(self,dt):
-        self.contador+=random.random()*self.dificultad*dt/1000
+        self.contador+=random.random()*self.aps*dt/1000
         while self.contador*1.0>1.0:
-            jugada=self.jugadaSimple()
-            if jugada!=0:
-                jugada[0].atacar(jugada[1])
-            else:
-                self.jugadaElaborada()
+            input=self.campo.get_input(self.nombre)
+            self.network.feed(np.array(input))
+            raw_output=self.network.get_output()
+            output=self.parse_output(raw_output)
+            objetivo=0
+            for i in range(10,20):
+                if output[i]==1:
+                    objetivo=i
+            for i in range(10):
+                if output[i]==1:
+                    self.campo.colonias[i].atacar(self.campo.colonias[objetivo-10])
             self.contador-=1
+
+
+    def parse_output(self, raw_output):
+        maxi=0
+        val_max=0
+        agregado=False
+        output=[]
+        for i in range(10):
+            c=self.campo.colonias[i]
+            if c.tipo.nombre==self.nombre:
+                if raw_output[i]>0.5:
+                    output+=[1]
+                    agregado=True
+                else:
+                    output+=[0]
+                    if raw_output[i]>val_max:
+                        val_max=raw_output[i]
+                        maxi=i
+            else:
+                output+=[0]
+        if not agregado:
+            output[maxi]=1
+        maxi=10
+        val_max=0
+        for i in range(10,20):
+            output+=[0]
+            if raw_output[i]>val_max:
+                val_max=raw_output[i]
+                maxi=i
+        output[maxi]=1
+        return output
+
+
 

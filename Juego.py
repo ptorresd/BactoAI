@@ -5,7 +5,8 @@ from pygame.locals import *
 import random
 import Jugador
 import time
-import IA
+import Greedy
+from IA import *
 
 snd_intro = 0
 snd_cursor = 0
@@ -55,6 +56,10 @@ def estadoMenu(vista):
                     tipoJugador = Vista.seleccionado
                     preparaJuego(vista)
                     return "juego"
+
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE:
+                    return "entrenamiento"
         vista.dibujarMenu()
         pygame.display.flip()
 
@@ -69,8 +74,9 @@ def preparaJuego(vista):
     jugador=Jugador.Jugador(campo,tipoJugador)
     vista.setCampo(campo)
     vista.setJugador(jugador)
-    ia=IA.IA(tipoIA.nombre,campo,0.8)
-    ia2 = IA.IA(tipoJugador.nombre, campo, 3)
+    ia=Greedy.IA(tipoIA.nombre, campo, 0.8)
+    network=Network(50,[40,30,20])
+    ia2 = IA(network,tipoJugador.nombre, campo, 3)
 
 def estadoJuego(vista):
     snd_main = pygame.mixer.Sound('res/MainTheme.wav')
@@ -134,7 +140,48 @@ def estadoJuego(vista):
             snd_main.stop()
             return "victoria"
         ia.jugar(dt)
-        #ia2.jugar(dt)             #para ver a las IAs jugar entre si, descomentar esta linea
+        ia2.jugar(dt)             #para ver a las IAs jugar entre si, descomentar esta linea
+
+def estadoEntrenamiento(vista):
+    global campo
+    network=import_network("IA_bacan.txt")
+    seguir=True
+    while seguir:
+        campo = mdl.Campo()
+        campo.rellenar(mdl.training_1,mdl.training_2)
+        ia_greedy=Greedy.IA("T2", campo, 1)
+        ia_nn = IA(network,"T1", campo, 1)
+        vista.setCampo(campo)
+        vista.setJugador(jugador)
+        termino=False
+        while True:
+            dt=200
+
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    if event.key== K_SPACE:
+                        seguir=False
+
+            campo.actualizar(dt / 1000)
+            vista.dibujarCampoEntrenamiento()
+            pygame.display.flip()
+
+            if campo.revisarDerrota("T1"):
+                termino=True
+            elif campo.revisarDerrota("T2"):
+                termino=True
+
+            if termino:
+                #aqui va el entrenamiento
+                break
+
+            ia_greedy.jugar(dt)
+            ia_nn.jugar(dt)
+
+    network.export_network("IA_bacan.txt")
+    return "menu"
+
+
 
 def estadoPausa(vista):
     while True:
@@ -215,6 +262,8 @@ def main():
             estado = estadoDerrota(vista)
         if estado == "pausa":
             estado = estadoPausa(vista)
+        if estado=="entrenamiento":
+            estado = estadoEntrenamiento(vista)
 
 
 

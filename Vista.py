@@ -96,6 +96,14 @@ class Vista:
         for a in self.campo.ataques:
             self.dibujarAtaque(a)
 
+    def dibujarCampoEntrenamiento(self):
+        texFondo=pygame.image.load('res/fondo2.png')
+        self.screen.blit(texFondo,(0,0))
+        for c in self.campo.colonias:
+            self.dibujarColonia(c)
+        for a in self.campo.ataques:
+            self.dibujarAtaque(a)
+
     def dibujarColonia(self,colonia):
         pygame.init()
         nSprites=colonia.tipo.sprites
