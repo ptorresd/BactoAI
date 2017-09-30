@@ -59,6 +59,7 @@ def estadoMenu(vista):
 
             if event.type == KEYDOWN:
                 if event.key == K_SPACE:
+                    snd_intro.stop()
                     return "entrenamiento"
         vista.dibujarMenu()
         pygame.display.flip()
@@ -74,9 +75,9 @@ def preparaJuego(vista):
     jugador=Jugador.Jugador(campo,tipoJugador)
     vista.setCampo(campo)
     vista.setJugador(jugador)
-    ia=Greedy.IA(tipoIA.nombre, campo, 0.8)
-    network=Network(50,[40,30,20])
-    ia2 = IA(network,tipoJugador.nombre, campo, 3)
+    ia2=Greedy.IA(tipoIA.nombre, campo, 0.8)
+    network=import_network("IA_bacan2.txt")
+    ia = IA(network,tipoIA.nombre, campo, 3)
 
 def estadoJuego(vista):
     snd_main = pygame.mixer.Sound('res/MainTheme.wav')
@@ -140,17 +141,17 @@ def estadoJuego(vista):
             snd_main.stop()
             return "victoria"
         ia.jugar(dt)
-        ia2.jugar(dt)             #para ver a las IAs jugar entre si, descomentar esta linea
+        #ia2.jugar(dt)             #para ver a las IAs jugar entre si, descomentar esta linea
 
 def estadoEntrenamiento(vista):
     global campo
-    network=import_network("IA_bacan.txt")
+    network=import_network("IA_bacan2.txt")
     seguir=True
     while seguir:
         campo = mdl.Campo()
         campo.rellenar(mdl.training_1,mdl.training_2)
-        ia_greedy=Greedy.IA("T2", campo, 1)
-        ia_nn = IA(network,"T1", campo, 1)
+        ia_greedy=Greedy.IA("T2", campo, 0.3)
+        ia_nn = IA(network,"T1", campo, 0.5)
         vista.setCampo(campo)
         vista.setJugador(jugador)
         termino=False
@@ -177,8 +178,11 @@ def estadoEntrenamiento(vista):
 
             ia_greedy.jugar(dt)
             ia_nn.jugar(dt)
+        ia_nn.evaluar_jugadas()
+        ia_nn.escribir_jugadas("jugadas.txt")
+        ia_nn.entrenar_jugadas(500)
 
-    network.export_network("IA_bacan.txt")
+    network.export_network("IA_bacan2.txt")
     return "menu"
 
 

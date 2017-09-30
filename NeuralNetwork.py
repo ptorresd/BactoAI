@@ -146,16 +146,16 @@ class Network:
 
     def train(self, input, expected_output, lRate=0.5):
 
-        t1 = datetime.now()
+        #t1 = datetime.now()
         self.feed(input)
-        t2 = datetime.now()
+        #t2 = datetime.now()
         self.back_propagation(expected_output)
-        t3 = datetime.now()
+        #t3 = datetime.now()
         self.adjust_weights(input, lRate)
-        t4 = datetime.now()
-        print(str((t2-t1).microseconds))
-        print(str((t3-t2).microseconds))
-        print(str((t4-t3).microseconds))
+        #t4 = datetime.now()
+        #print(str((t2-t1).microseconds))
+        #print(str((t3-t2).microseconds))
+        #print(str((t4-t3).microseconds))
 
     def export_network(self, direc):
         file = open(direc, 'w')

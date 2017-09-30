@@ -90,15 +90,15 @@ class Campo:
         return input
 
 
-    def indicador(self, tipo):
+    def indicador(self, nombre):
         ind=0
         for c in self.colonias:
-            if c.tipo.nombre==tipo.nombre:
+            if c.tipo.nombre==nombre:
                 ind+=50+c.bacterias
             else:
                 ind-=50+c.bacterias
         for a in self.ataques:
-            if a.tipo.nombre==tipo.nombre:
+            if a.tipo.nombre==nombre:
                 ind+=a.cantidad
             else:
                 ind-=a.cantidad
