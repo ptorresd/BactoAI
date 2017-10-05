@@ -76,8 +76,8 @@ def preparaJuego(vista):
     vista.setCampo(campo)
     vista.setJugador(jugador)
     ia2=Greedy.IA(tipoIA.nombre, campo, 0.8)
-    network=import_network("IA_bacan2.txt")
-    ia = IA(network,tipoIA.nombre, campo, 3)
+    network=import_network("IA_bacan3.txt")
+    ia = IA(network,tipoIA.nombre, campo, 1.5,200)
 
 def estadoJuego(vista):
     snd_main = pygame.mixer.Sound('res/MainTheme.wav')
@@ -145,27 +145,32 @@ def estadoJuego(vista):
 
 def estadoEntrenamiento(vista):
     global campo
-    network=import_network("IA_bacan2.txt")
+    clock = pygame.time.Clock()
+    network=import_network("IA_bacan3.txt")
+    #network = Network(50, [300, 100, 20])
     seguir=True
     while seguir:
         campo = mdl.Campo()
         campo.rellenar(mdl.training_1,mdl.training_2)
-        ia_greedy=Greedy.IA("T2", campo, 0.3)
-        ia_nn = IA(network,"T1", campo, 0.5)
+        ia_greedy=Greedy.IA("T2", campo, 1)
+        ia_nn = IA(network,"T1", campo, 1,200)
         vista.setCampo(campo)
         vista.setJugador(jugador)
         termino=False
         while True:
             dt=200
-
+            #dt=clock.tick(60)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key== K_SPACE:
                         seguir=False
 
             campo.actualizar(dt / 1000)
-            vista.dibujarCampoEntrenamiento()
-            pygame.display.flip()
+
+            ver=False
+            if ver:
+                vista.dibujarCampoEntrenamiento()
+                pygame.display.flip()
 
             if campo.revisarDerrota("T1"):
                 termino=True
@@ -178,11 +183,13 @@ def estadoEntrenamiento(vista):
 
             ia_greedy.jugar(dt)
             ia_nn.jugar(dt)
+        jugadas=ia_greedy.get_jugadas()
         ia_nn.evaluar_jugadas()
         ia_nn.escribir_jugadas("jugadas.txt")
-        ia_nn.entrenar_jugadas(500)
+        ia_nn.entrenar_greedy(jugadas,10,200000)
+        #ia_nn.entrenar_jugadas(10,200000)
 
-    network.export_network("IA_bacan2.txt")
+    network.export_network("IA_bacan3.txt")
     return "menu"
 
 

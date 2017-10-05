@@ -145,7 +145,6 @@ class Network:
             self.layers[i].adjust_weights(output, learning_rate)
 
     def train(self, input, expected_output, lRate=0.5):
-
         #t1 = datetime.now()
         self.feed(input)
         #t2 = datetime.now()

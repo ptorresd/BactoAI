@@ -9,29 +9,38 @@ def calcularTiempo(self, origen, objetivo):
 
 class IA:
 
-    def __init__(self, network, nombre, campo, aps):
+    def __init__(self, network, nombre, campo, aps, delta):
         self.network=network
         self.campo=campo
         self.nombre=nombre
         self.aps=aps
-        self.contador=0.0
+        self.delta=delta
+        self.contador_jugada=0.0
+        self.contador_indice=0
         self.jugadas=[]
         self.estados=[]
         self.indicador=[]
         self.evaluacion=[]
-        self.gama_p=math.pow(0.1,1/(10*self.aps))
-        self.gama_a=math.pow(0.1,1/(3*self.aps))
+        self.gama_p=math.pow(0.1,delta/1000)
+        self.gama_a=math.pow(0.1,delta/300)
 
 
     def jugar(self, dt):
 
-        self.contador+=dt
-        while self.contador>=1000/self.aps:
+        self.contador_indice+=dt
+        self.contador_jugada+=dt
+        while self.contador_indice>=self.delta:
+            self.indicador+=[self.campo.indicador(self.nombre)]
+            self.contador_indice-=self.delta
+
+
+        while self.contador_jugada>=1000/self.aps:
             input=self.campo.get_input(self.nombre)
             self.network.feed(np.array(input))
             raw_output=self.network.get_output()
             output=self.parse_output(raw_output)
             objetivo=0
+
             for i in range(10,20):
                 if output[i]==1:
                     objetivo=i
@@ -41,8 +50,7 @@ class IA:
 
             self.estados+=[input]
             self.jugadas+=[output]
-            self.indicador+=[self.campo.indicador(self.nombre)]
-            self.contador-=1000/self.aps
+            self.contador_jugada-=1000/self.aps
 
     def evaluar_jugadas(self):
         instantes=len(self.indicador)
@@ -50,10 +58,20 @@ class IA:
         for i in range(1,instantes):
             delta_a+=[self.indicador[i]-self.indicador[i-1]+delta_a[i-1]*self.gama_a]
         delta_p=[0.0]
+
         for i in range(instantes-2,-1,-1):
             delta_p=[self.gama_p*(self.indicador[i+1]-self.indicador[i]+delta_p[0])]+delta_p
-        for i in range(instantes):
-            self.evaluacion+=[delta_a[i]+delta_p[i]]
+
+        print(self.indicador)
+        print(delta_a)
+        print(delta_p)
+
+
+        for i in range(len(self.jugadas)):
+            t=min(int((4+i*1000/self.aps)/self.delta),instantes-1)
+            self.evaluacion+=[delta_a[t]+delta_p[t]]
+
+
 
     def escribir_jugadas(self,direc):
         file=open(direc,"a")
@@ -74,16 +92,36 @@ class IA:
         self.indicador=[]
         self.evaluacion=[]
 
-    def entrenar_jugadas(self, epochs):
+    def cambiar_sentido(self, input, x, y):
+        new_input=[]
+        for i in range(50):
+            if i%5==0:
+                new_input+=[(x*input[i]+(1-x)/2)]
+            elif i%5==1:
+                new_input+=[(y*input[i]+(1-y)/2)]
+            else:
+                new_input+=[input[i]]
+        return np.array(new_input)
+
+    def entrenar_greedy(self, jugadas, epochs, div):
+        for k in range(epochs):
+            for j in jugadas:
+                input=self.cambiar_sentido(j[0],-1,-1)
+                output=j[1]
+                learning_rate=j[2]/div
+                self.network.train(input,output,learning_rate)
+
+    def entrenar_jugadas(self, epochs, div):
         for k in range(epochs):
             print("epoch: "+str(k))
             for i in range(len(self.jugadas)):
                 input=np.array(self.estados[i])
                 output=self.jugadas[i]
-                learning_rate=self.evaluacion[i]
+                learning_rate=self.evaluacion[i]/div
                 self.network.train(input,output,learning_rate)
 
     def parse_output(self, raw_output):
+        print(raw_output)
         maxi=0
         val_max=0
         agregado=False

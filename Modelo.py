@@ -58,13 +58,14 @@ violeta = TipoBacteria(130, 3.5, 1.5, 3, "Violeta", 6)
 verde = TipoBacteria(70, 2, 2, 5  , "Verde", 6)
 
 training_1 = TipoBacteria(70, 3, 3, 3, "T1", 6)
-training_2 = TipoBacteria(70, 3, 3, 3, "T2", 6)
+training_2 = TipoBacteria(70, 2.5, 2.5, 2.5, "T2", 6)
 
 
 ##################################################### Campo ###########################################################
 
 
 class Campo:
+
 
 
     def __init__(self):
@@ -117,6 +118,7 @@ class Campo:
                 if self.cabe(cNeutral):
                     self.addColonia(cNeutral)
                     break
+        random.shuffle(self.colonias)
 
     def revisarDerrota(self,nombre):
         for c in self.colonias:

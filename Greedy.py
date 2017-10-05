@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 def sacarMaximoBacterias(colonias):
     aux=[]
@@ -33,8 +34,7 @@ class IA:
         self.campo=campo
         self.dificultad=dificultad
         self.contador=0
-        self.baneadas=[]
-        self.tiempoBaneadas=[]
+        self.jugadas=[]
 
     def getColonias(self):
         aliadas=[]
@@ -64,13 +64,29 @@ class IA:
         bactEnemigas=objetivo.bacterias+tiempo*objetivo.tipo.reproduccion
         return bactEnemigas*objetivo.tipo.defensa<cantidad*colonias[0].tipo.ataque
 
+    def parse_output(self, colonias, obj):
+        output=[]
+        for i in range(10):
+            c=self.campo.colonias[i]
+            if c in colonias:
+                output+=[1]
+            else:
+                output+=[0]
+        for i in range(10):
+            c=self.campo.colonias[i]
+            if c == obj:
+                output+=[1]
+            else:
+                output+=[0]
+        return np.array(output)
+
     def jugadaSimple(self):
         colonias=self.getColonias()
         mejorOpcion=0
         disMin=1000000
         for ori in colonias[0]:
             for obj in colonias[1]:
-                if self.sirve(ori,obj) and ori.dis(obj)<disMin and obj not in self.baneadas:
+                if self.sirve(ori,obj) and ori.dis(obj)<disMin:
                     alreadyAtacked=False
                     for a in self.campo.ataques:
                         if a.objetivo==obj and a.tipo.nombre==self.nombre:
@@ -98,7 +114,11 @@ class IA:
                     jugada=[colonias,objetivo]
                     break
 
+
         if jugada != 0:
+            output = self.parse_output(jugada[0], jugada[1])
+            input = np.array(self.campo.get_input(self.nombre))
+            self.jugadas += [[input, output, 50]]
             for c in jugada[0]:
                 c.atacar(jugada[1])
 
@@ -108,13 +128,19 @@ class IA:
         maximo,basura=sacarMaximoBacterias(aliadas)
         maximo.atacar(objetivo)
 
+    def get_jugadas(self):
+        return self.jugadas
 
     def jugar(self,dt):
-        self.contador+=random.random()*self.dificultad*dt/1000
+        self.contador+=2*random.random()*self.dificultad*dt/1000
         while self.contador*1.0>1.0:
             jugada=self.jugadaSimple()
             if jugada!=0:
                 jugada[0].atacar(jugada[1])
+                output=self.parse_output([jugada[0]],jugada[1])
+                input=np.array(self.campo.get_input(self.nombre))
+                self.jugadas+=[[input,output,50]]
+
             else:
                 self.jugadaElaborada()
             self.contador-=1
