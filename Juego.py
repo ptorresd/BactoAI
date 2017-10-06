@@ -159,15 +159,19 @@ def estadoEntrenamiento(vista):
         termino=False
         while True:
             dt=200
+            panic_button=False
             #dt=clock.tick(60)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key== K_SPACE:
                         seguir=False
 
+                    if event.key== K_ESCAPE:
+                        panic_button=True
+
             campo.actualizar(dt / 1000)
 
-            ver=False
+            ver=True
             if ver:
                 vista.dibujarCampoEntrenamiento()
                 pygame.display.flip()
@@ -177,7 +181,7 @@ def estadoEntrenamiento(vista):
             elif campo.revisarDerrota("T2"):
                 termino=True
 
-            if termino:
+            if termino or panic_button:
                 #aqui va el entrenamiento
                 break
 
@@ -185,8 +189,9 @@ def estadoEntrenamiento(vista):
             ia_nn.jugar(dt)
         jugadas=ia_greedy.get_jugadas()
         ia_nn.evaluar_jugadas()
-        ia_nn.escribir_jugadas("jugadas.txt")
-        ia_nn.entrenar_greedy(jugadas,10,200000)
+        ia_greedy.escribir_jugadas("jugadas.txt")
+        #ia_nn.escribir_jugadas("jugadas.txt")
+        ia_nn.entrenar_greedy(jugadas,10,0.0002)
         #ia_nn.entrenar_jugadas(10,200000)
 
     network.export_network("IA_bacan3.txt")

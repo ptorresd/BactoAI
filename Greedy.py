@@ -118,7 +118,7 @@ class IA:
         if jugada != 0:
             output = self.parse_output(jugada[0], jugada[1])
             input = np.array(self.campo.get_input(self.nombre))
-            self.jugadas += [[input, output, 50]]
+            self.jugadas += [[input, output]]
             for c in jugada[0]:
                 c.atacar(jugada[1])
 
@@ -131,6 +131,17 @@ class IA:
     def get_jugadas(self):
         return self.jugadas
 
+    def escribir_jugadas(self,direc):
+        file=open(direc,"a")
+        for j in self.jugadas:
+            for n in j[0]:
+                file.write(str(n)+" ")
+            file.write("\n")
+            for n in j[1]:
+                file.write(str(n)+" ")
+            file.write("\n")
+        file.close()
+
     def jugar(self,dt):
         self.contador+=2*random.random()*self.dificultad*dt/1000
         while self.contador*1.0>1.0:
@@ -139,7 +150,7 @@ class IA:
                 jugada[0].atacar(jugada[1])
                 output=self.parse_output([jugada[0]],jugada[1])
                 input=np.array(self.campo.get_input(self.nombre))
-                self.jugadas+=[[input,output,50]]
+                self.jugadas+=[[input,output]]
 
             else:
                 self.jugadaElaborada()

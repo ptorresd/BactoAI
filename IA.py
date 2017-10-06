@@ -68,7 +68,7 @@ class IA:
 
 
         for i in range(len(self.jugadas)):
-            t=min(int((4+i*1000/self.aps)/self.delta),instantes-1)
+            t=min(int((4+i/self.aps)*1000/self.delta),instantes-1)
             self.evaluacion+=[delta_a[t]+delta_p[t]]
 
 
@@ -103,12 +103,11 @@ class IA:
                 new_input+=[input[i]]
         return np.array(new_input)
 
-    def entrenar_greedy(self, jugadas, epochs, div):
+    def entrenar_greedy(self, jugadas, epochs, learning_rate):
         for k in range(epochs):
             for j in jugadas:
                 input=self.cambiar_sentido(j[0],-1,-1)
                 output=j[1]
-                learning_rate=j[2]/div
                 self.network.train(input,output,learning_rate)
 
     def entrenar_jugadas(self, epochs, div):
