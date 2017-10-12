@@ -76,8 +76,8 @@ def preparaJuego(vista):
     vista.setCampo(campo)
     vista.setJugador(jugador)
     ia2=Greedy.IA(tipoIA.nombre, campo, 0.8)
-    network=import_network("IA_bacan3.txt")
-    ia = IA(network,tipoIA.nombre, campo, 1.5,200)
+    network=import_network("IA_java6.txt")
+    ia = IA(network,tipoIA.nombre, campo, 1.5)
 
 def estadoJuego(vista):
     snd_main = pygame.mixer.Sound('res/MainTheme.wav')
@@ -146,55 +146,56 @@ def estadoJuego(vista):
 def estadoEntrenamiento(vista):
     global campo
     clock = pygame.time.Clock()
-    network=import_network("IA_bacan3.txt")
+    network=import_network("IA_java6.txt")
     #network = Network(50, [300, 100, 20])
     seguir=True
+    greedy=0
+    nn=0
     while seguir:
         campo = mdl.Campo()
         campo.rellenar(mdl.training_1,mdl.training_2)
-        ia_greedy=Greedy.IA("T2", campo, 1)
-        ia_nn = IA(network,"T1", campo, 1,200)
+        ia_greedy=Greedy.IA("T2", campo, 0.5)
+        ia_nn = IA(network,"T1", campo, 0.5)
         vista.setCampo(campo)
         vista.setJugador(jugador)
         termino=False
         while True:
             dt=200
-            panic_button=False
             #dt=clock.tick(60)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key== K_SPACE:
                         seguir=False
 
-                    if event.key== K_ESCAPE:
-                        panic_button=True
-
             campo.actualizar(dt / 1000)
 
-            ver=True
+            ver=False
             if ver:
                 vista.dibujarCampoEntrenamiento()
                 pygame.display.flip()
 
             if campo.revisarDerrota("T1"):
+                #ia_greedy.escribir_jugadas("jugadas.txt")
+                greedy+=1
                 termino=True
             elif campo.revisarDerrota("T2"):
+                #ia_nn.escribir_jugadas("jugadas.txt")
+                nn+=1
                 termino=True
 
-            if termino or panic_button:
-                #aqui va el entrenamiento
+            if termino:
                 break
 
             ia_greedy.jugar(dt)
             ia_nn.jugar(dt)
-        jugadas=ia_greedy.get_jugadas()
-        ia_nn.evaluar_jugadas()
-        ia_greedy.escribir_jugadas("jugadas.txt")
+        #jugadas=ia_greedy.get_jugadas()
         #ia_nn.escribir_jugadas("jugadas.txt")
-        ia_nn.entrenar_greedy(jugadas,10,0.0002)
+        #ia_nn.entrenar_greedy(jugadas,10,0.0002)
         #ia_nn.entrenar_jugadas(10,200000)
 
-    network.export_network("IA_bacan3.txt")
+    #network.export_network("IA_java2.txt")
+    print("greedy: "+str(greedy))
+    print("nn: " + str(nn))
     return "menu"
 
 

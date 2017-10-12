@@ -76,9 +76,12 @@ class Campo:
         for c in self.colonias:
             c.amenaza=0.0
         for a in self.ataques:
-            a.objetivo.amenaza+=a.cantidad
+            if a.tipo.nombre!=a.objetivo.tipo.nombre:
+                a.objetivo.amenaza+=a.cantidad
+            else:
+                a.objetivo.amenaza-=a.cantidad
         for c in self.colonias:
-            c.amenaza=min(c.amenaza/(c.bacterias+30),1.0)
+            c.amenaza=max(min(c.amenaza/(c.bacterias+30),1.0),0.0)
 
     def get_input(self, nombre):
         input=[]
@@ -106,7 +109,7 @@ class Campo:
         return ind
 
     def rellenar(self,tipo1,tipo2):
-        neutral=TipoBacteria(0,0,1,0,"neutral",1)
+        neutral=TipoBacteria(0,0,3,0,"neutral",1)
         n=10#int(random.random()*5+10)
         base1=Colonia(60,60,20,tipo1,45)
         self.addColonia(base1)

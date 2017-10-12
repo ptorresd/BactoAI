@@ -9,30 +9,18 @@ def calcularTiempo(self, origen, objetivo):
 
 class IA:
 
-    def __init__(self, network, nombre, campo, aps, delta):
+    def __init__(self, network, nombre, campo, aps):
         self.network=network
         self.campo=campo
         self.nombre=nombre
         self.aps=aps
-        self.delta=delta
         self.contador_jugada=0.0
-        self.contador_indice=0
         self.jugadas=[]
         self.estados=[]
-        self.indicador=[]
-        self.evaluacion=[]
-        self.gama_p=math.pow(0.1,delta/1000)
-        self.gama_a=math.pow(0.1,delta/300)
-
 
     def jugar(self, dt):
 
-        self.contador_indice+=dt
         self.contador_jugada+=dt
-        while self.contador_indice>=self.delta:
-            self.indicador+=[self.campo.indicador(self.nombre)]
-            self.contador_indice-=self.delta
-
 
         while self.contador_jugada>=1000/self.aps:
             input=self.campo.get_input(self.nombre)
@@ -52,26 +40,6 @@ class IA:
             self.jugadas+=[output]
             self.contador_jugada-=1000/self.aps
 
-    def evaluar_jugadas(self):
-        instantes=len(self.indicador)
-        delta_a=[0.0]
-        for i in range(1,instantes):
-            delta_a+=[self.indicador[i]-self.indicador[i-1]+delta_a[i-1]*self.gama_a]
-        delta_p=[0.0]
-
-        for i in range(instantes-2,-1,-1):
-            delta_p=[self.gama_p*(self.indicador[i+1]-self.indicador[i]+delta_p[0])]+delta_p
-
-        print(self.indicador)
-        print(delta_a)
-        print(delta_p)
-
-
-        for i in range(len(self.jugadas)):
-            t=min(int((4+i/self.aps)*1000/self.delta),instantes-1)
-            self.evaluacion+=[delta_a[t]+delta_p[t]]
-
-
 
     def escribir_jugadas(self,direc):
         file=open(direc,"a")
@@ -82,7 +50,6 @@ class IA:
             for n in self.jugadas[i]:
                 file.write(str(n)+" ")
             file.write("\n")
-            file.write(str(self.evaluacion[i])+"\n")
         file.close()
 
     def reiniciar_estadisticas(self):
@@ -110,17 +77,16 @@ class IA:
                 output=j[1]
                 self.network.train(input,output,learning_rate)
 
-    def entrenar_jugadas(self, epochs, div):
+    def entrenar_jugadas(self, epochs, learning_rate):
         for k in range(epochs):
             print("epoch: "+str(k))
             for i in range(len(self.jugadas)):
                 input=np.array(self.estados[i])
                 output=self.jugadas[i]
-                learning_rate=self.evaluacion[i]/div
                 self.network.train(input,output,learning_rate)
 
     def parse_output(self, raw_output):
-        print(raw_output)
+        #print(raw_output)
         maxi=0
         val_max=0
         agregado=False
@@ -149,6 +115,10 @@ class IA:
                 maxi=i
         output[maxi]=1
         return output
+
+
+    def train_from_file(self, direc, epochs, learning_rate):
+        self.network.train_from_file(direc,epochs,learning_rate)
 
 
 

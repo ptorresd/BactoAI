@@ -156,6 +156,31 @@ class Network:
         #print(str((t3-t2).microseconds))
         #print(str((t4-t3).microseconds))
 
+    def train_from_file(self, direc, epochs, learning_rate):
+        file = open(direc, 'r')
+        test_cases=[]
+        input=file.readline()
+        output=file.readline()
+        while(input!=''):
+            new_case=[]
+            new_case.append(np.array(input.replace(' \n','').split()).astype(np.float))
+            new_case.append(np.array(output.replace(' \n','').split()).astype(np.float))
+            test_cases.append(new_case)
+            input=file.readline()
+            output=file.readline()
+
+
+        for k in range(epochs):
+            i=0
+            print(k)
+            for t in test_cases:
+                i+=1
+                print(i)
+                self.train(t[0],t[1],learning_rate)
+
+        file.close()
+
+
     def export_network(self, direc):
         file = open(direc, 'w')
         shape = [self.first().get_input_size()]
@@ -195,7 +220,7 @@ def import_network(direc):
     return network
 
 
-def main():
+def test():
     test_cases = [np.array([0, 0]), np.array([1, 0]), np.array([0, 1]), np.array([1, 1])]
     expected_output = [np.array([1, 0]), np.array([0, 1]), np.array([0, 1]), np.array([1, 0])]
     network = Network(2, [100, 50, 50, 20, 2])
@@ -210,7 +235,12 @@ def main():
 
     network.export_network("asd.txt")
 
-
+def main():
+    a=2.0409825040414387E-4
+    print(a)
+    network=import_network("IA_bacan3.txt")
+    #network.train_from_file("jugadas.txt",10,0.0001)
+    network.export_network("IA_bacan4.txt")
 
 if __name__ == '__main__':
     main()
