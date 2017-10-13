@@ -223,7 +223,7 @@ def import_network(direc):
 def test():
     test_cases = [np.array([0, 0]), np.array([1, 0]), np.array([0, 1]), np.array([1, 1])]
     expected_output = [np.array([1, 0]), np.array([0, 1]), np.array([0, 1]), np.array([1, 0])]
-    network = Network(2, [100, 50, 50, 20, 2])
+    network = Network(2, [4, 2])
     epoch = 1000
     for i in range(epoch):
         for j in range(4):
@@ -236,11 +236,10 @@ def test():
     network.export_network("asd.txt")
 
 def main():
-    a=2.0409825040414387E-4
-    print(a)
-    network=import_network("IA_bacan3.txt")
-    #network.train_from_file("jugadas.txt",10,0.0001)
-    network.export_network("IA_bacan4.txt")
+    direccion_red="IA_bacan3.txt"
+    network=import_network(direccion_red)
+    network.train_from_file("jugadas.txt",10,0.0001)
+    network.export_network(direccion_red)
 
 if __name__ == '__main__':
     main()

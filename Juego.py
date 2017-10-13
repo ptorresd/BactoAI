@@ -76,8 +76,8 @@ def preparaJuego(vista):
     vista.setCampo(campo)
     vista.setJugador(jugador)
     ia2=Greedy.IA(tipoIA.nombre, campo, 0.8)
-    network=import_network("IA_java6.txt")
-    ia = IA(network,tipoIA.nombre, campo, 1.5)
+    network=import_network("IA_50_50_50/IA_java_3550.txt")
+    ia = IA(network,tipoIA.nombre, campo, 2)
 
 def estadoJuego(vista):
     snd_main = pygame.mixer.Sound('res/MainTheme.wav')
@@ -146,14 +146,14 @@ def estadoJuego(vista):
 def estadoEntrenamiento(vista):
     global campo
     clock = pygame.time.Clock()
-    network=import_network("IA_java6.txt")
+    network=import_network("IA_50_50_50/IA_java_3550.txt")
     #network = Network(50, [300, 100, 20])
     seguir=True
-    greedy=0
-    nn=0
+    contador_greedy=0
+    contador_nn=0
     while seguir:
         campo = mdl.Campo()
-        campo.rellenar(mdl.training_1,mdl.training_2)
+        campo.rellenar(mdl.training_2,mdl.training_1)
         ia_greedy=Greedy.IA("T2", campo, 0.5)
         ia_nn = IA(network,"T1", campo, 0.5)
         vista.setCampo(campo)
@@ -176,11 +176,11 @@ def estadoEntrenamiento(vista):
 
             if campo.revisarDerrota("T1"):
                 #ia_greedy.escribir_jugadas("jugadas.txt")
-                greedy+=1
+                contador_greedy+=1
                 termino=True
             elif campo.revisarDerrota("T2"):
                 #ia_nn.escribir_jugadas("jugadas.txt")
-                nn+=1
+                contador_nn+=1
                 termino=True
 
             if termino:
@@ -189,16 +189,49 @@ def estadoEntrenamiento(vista):
             ia_greedy.jugar(dt)
             ia_nn.jugar(dt)
         #jugadas=ia_greedy.get_jugadas()
-        #ia_nn.escribir_jugadas("jugadas.txt")
         #ia_nn.entrenar_greedy(jugadas,10,0.0002)
-        #ia_nn.entrenar_jugadas(10,200000)
+        #ia_nn.entrenar_jugadas(10,0.0002)
 
     #network.export_network("IA_java2.txt")
-    print("greedy: "+str(greedy))
-    print("nn: " + str(nn))
+    print("greedy: "+str(contador_greedy))
+    print("nn: " + str(contador_nn))
     return "menu"
 
+def estado_estadisticas(vista):
+    global campo
+    lim=2000
+    carpeta="IA_80"
+    victorias=[]
+    for i in range(0,lim+1,50):
+        print(str(i))
+        network = import_network(carpeta+"/IA_java_"+str(i)+".txt")
 
+        contador_nn = 0
+        for j in range(200):
+
+            campo = mdl.Campo()
+            campo.rellenar(mdl.training_2, mdl.training_1)
+            ia_greedy = Greedy.IA("T2", campo, 0.5)
+            ia_nn = IA(network, "T1", campo, 0.5)
+            tiempo=0
+            while True:
+                dt = 200
+                tiempo+=dt
+                campo.actualizar(dt / 1000)
+                if campo.revisarDerrota("T1"):
+                    break
+                elif campo.revisarDerrota("T2"):
+                    contador_nn += 1
+                    break
+
+                if tiempo>600000:
+                    print("SE METIO EN UN LOOP")
+                    break
+                ia_greedy.jugar(dt)
+                ia_nn.jugar(dt)
+        victorias.append(contador_nn)
+    print(str(victorias))
+    return "menu"
 
 def estadoPausa(vista):
     while True:
@@ -280,7 +313,7 @@ def main():
         if estado == "pausa":
             estado = estadoPausa(vista)
         if estado=="entrenamiento":
-            estado = estadoEntrenamiento(vista)
+            estado = estado_estadisticas(vista)
 
 
 
